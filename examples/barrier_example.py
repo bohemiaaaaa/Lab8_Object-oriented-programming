@@ -1,8 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*
+
+
 from threading import Barrier, Thread
-from time import sleep, time
+from time import sleep
 
 br = Barrier(3)
 store = []
+
 
 def f1(x):
     print("Calc part1")
@@ -10,16 +15,18 @@ def f1(x):
     sleep(0.5)
     br.wait()
 
+
 def f2(x):
     print("Calc part2")
-    store.append(x*2)
+    store.append(x * 2)
     sleep(1)
     br.wait()
+
 
 if __name__ == "__main__":
     Thread(target=f1, args=(3,)).start()
     Thread(target=f2, args=(7,)).start()
-    
+
     br.wait()
-    
+
     print("Result: ", sum(store))

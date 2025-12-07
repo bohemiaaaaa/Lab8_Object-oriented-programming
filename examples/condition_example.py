@@ -1,9 +1,10 @@
+from queue import Empty, Queue
 from threading import Condition, Thread
-from queue import Queue
 from time import sleep
 
 cv = Condition()
 q = Queue()
+
 
 def order_processor(name):
     while True:
@@ -15,9 +16,10 @@ def order_processor(name):
                 print(f"{name}: {order}")
                 if order == "stop":
                     break
-            except:
+            except Empty:
                 pass
         sleep(0.1)
+
 
 if __name__ == "__main__":
     Thread(target=order_processor, args=("thread 1",)).start()
@@ -26,9 +28,9 @@ if __name__ == "__main__":
 
     for i in range(10):
         q.put(f"order {i}")
-    
+
     for _ in range(3):
         q.put("stop")
-    
+
     with cv:
         cv.notify_all()
