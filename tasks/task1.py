@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*
 
+
 import math
 import threading
 from queue import Queue
@@ -27,7 +28,6 @@ def calculate_series(
         if term == 0.0 or abs(term) < epsilon:
             result_queue.put(total_sum)
 
-            # FIX — уведомляем второй поток, что данные готовы
             if cv is not None:
                 with cv:
                     cv.notify()
@@ -39,7 +39,6 @@ def calculate_series(
         n += 1
         sleep(0.001)
 
-    # FIX — правильное условие
     if result_queue.empty():
         result_queue.put(total_sum)
         if cv is not None:
@@ -94,7 +93,7 @@ if __name__ == "__main__":
 
     series_thread = threading.Thread(
         target=calculate_series,
-        args=(x, epsilon, series_queue, stop_event, cv),  # FIX — передаём cv
+        args=(x, epsilon, series_queue, stop_event, cv),
         name="SeriesCalculator",
     )
 
@@ -106,9 +105,6 @@ if __name__ == "__main__":
 
     series_thread.start()
     control_thread.start()
-
-    # FIX — notify более НЕ нужен, потоки теперь общаются сами
-
     series_thread.join(timeout=5)
     control_thread.join(timeout=5)
 
