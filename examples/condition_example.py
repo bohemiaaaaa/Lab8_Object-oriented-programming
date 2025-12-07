@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*
+
+
 from queue import Empty, Queue
 from threading import Condition, Thread
 from time import sleep
