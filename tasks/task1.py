@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*
 
-
 import math
 import threading
 from queue import Queue
@@ -17,7 +16,7 @@ def series_term(n: int, x: float) -> float:
 
 
 def calculate_series(
-    x: float, epsilon: float, result_queue: Queue, stop_event: threading.Event
+    x: float, epsilon: float, result_queue: Queue, stop_event: threading.Event, cv=None
 ) -> None:
     total_sum = 0.0
     n = 1
@@ -26,17 +25,26 @@ def calculate_series(
         term = series_term(n, x)
 
         if term == 0.0 or abs(term) < epsilon:
-            stop_event.set()
             result_queue.put(total_sum)
+
+            # FIX — уведомляем второй поток, что данные готовы
+            if cv is not None:
+                with cv:
+                    cv.notify()
+
+            stop_event.set()
             break
 
         total_sum += term
         n += 1
-
         sleep(0.001)
 
-    if not result_queue.empty():
+    # FIX — правильное условие
+    if result_queue.empty():
         result_queue.put(total_sum)
+        if cv is not None:
+            with cv:
+                cv.notify()
 
 
 def calculate_control_value(
@@ -86,7 +94,7 @@ if __name__ == "__main__":
 
     series_thread = threading.Thread(
         target=calculate_series,
-        args=(x, epsilon, series_queue, stop_event),
+        args=(x, epsilon, series_queue, stop_event, cv),  # FIX — передаём cv
         name="SeriesCalculator",
     )
 
@@ -99,9 +107,7 @@ if __name__ == "__main__":
     series_thread.start()
     control_thread.start()
 
-    sleep(0.1)
-    with cv:
-        cv.notify()
+    # FIX — notify более НЕ нужен, потоки теперь общаются сами
 
     series_thread.join(timeout=5)
     control_thread.join(timeout=5)
